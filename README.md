@@ -1,8 +1,6 @@
 # QuestPhantom
 
-Automate Discord Quests efficiently with this JavaScript script.
-
-<img src="https://i.imgur.com/PF8Tq4C.png" width="500" alt="QuestPhantom">
+<img src="https://i.imgur.com/PF8Tq4C.png" width="50" alt="QuestPhantom"> Automate Discord Quests efficiently with this JavaScript script. 
 
 ## Overview
 
@@ -61,3 +59,4 @@ If the script doesn't work:
 - Verify you're logged into Discord
 - Check that quests are still active
 - Look for errors in the Developer Tools Console
+
