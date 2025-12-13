@@ -2,7 +2,7 @@
 
 Automate Discord Quests efficiently with this JavaScript script.
 
-![QuestPhantom](https://i.imgur.com/PF8Tq4C.png)
+<img src="https://i.imgur.com/PF8Tq4C.png" width="500" alt="QuestPhantom">
 
 ## Overview
 
