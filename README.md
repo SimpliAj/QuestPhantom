@@ -52,6 +52,10 @@ The script accesses the following Discord internal modules:
 
 Private - For personal use only
 
+## Credits
+
+This is an adapted version of [this gist](https://gist.github.com/aamiaa/204cd9d42013ded9faf646fae7f89fbb) by aamiaa.
+
 ## Troubleshooting
 
 If the script doesn't work:
@@ -59,4 +63,5 @@ If the script doesn't work:
 - Verify you're logged into Discord
 - Check that quests are still active
 - Look for errors in the Developer Tools Console
+
 
