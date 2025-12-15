@@ -175,4 +175,5 @@ async function processQuest(quest, allQuests, questIndex) {
 		}
 		fn()
 	}
+
 }
