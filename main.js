@@ -2,32 +2,59 @@ delete window.$;
 let wpRequire = webpackChunkdiscord_app.push([[Symbol()], {}, r => r]);
 webpackChunkdiscord_app.pop();
 
-let ApplicationStreamingStore = Object.values(wpRequire.c).find(x => x?.exports?.Z?.__proto__?.getStreamerActiveStreamMetadata).exports.Z;
-let RunningGameStore = Object.values(wpRequire.c).find(x => x?.exports?.ZP?.getRunningGames).exports.ZP;
-let QuestsStore = Object.values(wpRequire.c).find(x => x?.exports?.Z?.__proto__?.getQuest).exports.Z;
-let ChannelStore = Object.values(wpRequire.c).find(x => x?.exports?.Z?.__proto__?.getAllThreadsForParent).exports.Z;
-let GuildChannelStore = Object.values(wpRequire.c).find(x => x?.exports?.ZP?.getSFWDefaultChannel).exports.ZP;
-let FluxDispatcher = Object.values(wpRequire.c).find(x => x?.exports?.Z?.__proto__?.flushWaitQueue).exports.Z;
-let api = Object.values(wpRequire.c).find(x => x?.exports?.tn?.get).exports.tn;
+let ApplicationStreamingStore = Object.values(wpRequire.c).find(x => x?.exports?.Z?.__proto__?.getStreamerActiveStreamMetadata)?.exports?.Z;
+let RunningGameStore, QuestsStore, ChannelStore, GuildChannelStore, FluxDispatcher, api
+if(!ApplicationStreamingStore) {
+	ApplicationStreamingStore = Object.values(wpRequire.c).find(x => x?.exports?.A?.__proto__?.getStreamerActiveStreamMetadata)?.exports?.A;
+	RunningGameStore = Object.values(wpRequire.c).find(x => x?.exports?.Ay?.getRunningGames)?.exports?.Ay;
+	QuestsStore = Object.values(wpRequire.c).find(x => x?.exports?.A?.__proto__?.getQuest)?.exports?.A;
+	ChannelStore = Object.values(wpRequire.c).find(x => x?.exports?.A?.__proto__?.getAllThreadsForParent)?.exports?.A;
+	GuildChannelStore = Object.values(wpRequire.c).find(x => x?.exports?.Ay?.getSFWDefaultChannel)?.exports?.Ay;
+	FluxDispatcher = Object.values(wpRequire.c).find(x => x?.exports?.h?.__proto__?.flushWaitQueue)?.exports?.h;
+	api = Object.values(wpRequire.c).find(x => x?.exports?.Bo?.get)?.exports?.Bo;
+} else {
+	RunningGameStore = Object.values(wpRequire.c).find(x => x?.exports?.ZP?.getRunningGames)?.exports?.ZP;
+	QuestsStore = Object.values(wpRequire.c).find(x => x?.exports?.Z?.__proto__?.getQuest)?.exports?.Z;
+	ChannelStore = Object.values(wpRequire.c).find(x => x?.exports?.Z?.__proto__?.getAllThreadsForParent)?.exports?.Z;
+	GuildChannelStore = Object.values(wpRequire.c).find(x => x?.exports?.ZP?.getSFWDefaultChannel)?.exports?.ZP;
+	FluxDispatcher = Object.values(wpRequire.c).find(x => x?.exports?.Z?.__proto__?.flushWaitQueue)?.exports?.Z;
+	api = Object.values(wpRequire.c).find(x => x?.exports?.tn?.get)?.exports?.tn;	
+}
 
-let allQuests = [...QuestsStore.quests.values()].filter(x => x.id !== "1412491570820812933" && x.userStatus?.enrolledAt && !x.userStatus?.completedAt && new Date(x.config.expiresAt).getTime() > Date.now())
+// Logger für CLI
+function logToFile(type, message, data = {}) {
+	const logEntry = {
+		type,
+		message,
+		data,
+		timestamp: new Date().toISOString()
+	};
+	console.log(JSON.stringify(logEntry));
+}
+
+const supportedTasks = ["WATCH_VIDEO", "PLAY_ON_DESKTOP", "STREAM_ON_DESKTOP", "PLAY_ACTIVITY", "WATCH_VIDEO_ON_MOBILE"]
+let allQuests = QuestsStore?.quests ? [...QuestsStore.quests.values()].filter(x => x.id !== "1412491570820812933" && x.userStatus?.enrolledAt && !x.userStatus?.completedAt && new Date(x.config.expiresAt).getTime() > Date.now() && supportedTasks.find(y => Object.keys((x.config.taskConfig ?? x.config.taskConfigV2).tasks).includes(y))) : []
 let isApp = typeof DiscordNative !== "undefined"
 
-if(!allQuests || allQuests.length === 0) {
-	console.log("You don't have any uncompleted quests!")
+if(!QuestsStore) {
+	logToFile("error", "QuestsStore not found! Cannot proceed.", {})
+} else if(!allQuests || allQuests.length === 0) {
+	logToFile("info", "You don't have any uncompleted quests!")
 } else {
-	console.log(`Found ${allQuests.length} active quest(s). Starting to process them sequentially...`)
+	logToFile("info", `Found ${allQuests.length} active quest(s). Starting to process them sequentially...`, {totalQuests: allQuests.length})
 	processQuestsSequentially(allQuests, 0)
 }
 
 async function processQuestsSequentially(quests, index) {
 	if(index >= quests.length) {
-		console.log("All quests completed!")
+		logToFile("info", "All quests completed! Starting to redeem rewards...")
+		await redeemAllQuests(quests)
+		logToFile("completed", "All quests completed and redeemed!")
 		return
 	}
 	
 	let quest = quests[index]
-	console.log(`\n[Quest ${index + 1}/${quests.length}] Processing: ${quest.config.messages.questName}`)
+	logToFile("quest_start", `Processing: ${quest.config.messages.questName}`, {questIndex: index + 1, totalQuests: quests.length, questName: quest.config.messages.questName})
 	
 	// Process the current quest
 	await processQuest(quest, quests, index)
@@ -57,6 +84,7 @@ async function processQuest(quest, allQuests, questIndex) {
 					const res = await api.post({url: `/quests/${quest.id}/video-progress`, body: {timestamp: Math.min(secondsNeeded, timestamp + Math.random())}})
 					completed = res.body.completed_at != null
 					secondsDone = Math.min(secondsNeeded, timestamp)
+					logToFile("progress", `Quest "${questName}" progress: ${secondsDone}/${secondsNeeded}`, {questName, current: secondsDone, total: secondsNeeded, percentage: Math.round((secondsDone / secondsNeeded) * 100)})
 				}
 				
 				if(timestamp >= secondsNeeded) {
@@ -67,14 +95,14 @@ async function processQuest(quest, allQuests, questIndex) {
 			if(!completed) {
 				await api.post({url: `/quests/${quest.id}/video-progress`, body: {timestamp: secondsNeeded}})
 			}
-			console.log("Quest completed!")
+			logToFile("quest_complete", "Quest completed!", {questName})
 			processQuestsSequentially(allQuests, questIndex + 1)
 		}
 		fn()
-		console.log(`Spoofing video for ${questName}.`)
+		logToFile("spoofing", `Spoofing video for ${questName}.`, {questName})
 	} else if(taskName === "PLAY_ON_DESKTOP") {
 		if(!isApp) {
-			console.log("This no longer works in browser for non-video quests. Use the discord desktop app to complete the", questName, "quest!")
+			logToFile("error", "This no longer works in browser for non-video quests. Use the discord desktop app to complete the quest!", {questName})
 		} else {
 			api.get({url: `/applications/public?application_ids=${applicationId}`}).then(res => {
 				const appData = res.body[0]
@@ -103,10 +131,10 @@ async function processQuest(quest, allQuests, questIndex) {
 				
 				let fn = data => {
 					let progress = quest.config.configVersion === 1 ? data.userStatus.streamProgressSeconds : Math.floor(data.userStatus.progress.PLAY_ON_DESKTOP.value)
-					console.log(`Quest progress: ${progress}/${secondsNeeded}`)
+					logToFile("progress", `Quest "${questName}" progress: ${progress}/${secondsNeeded}`, {questName, current: progress, total: secondsNeeded, percentage: Math.round((progress / secondsNeeded) * 100)})
 					
 					if(progress >= secondsNeeded) {
-						console.log("Quest completed!")
+						logToFile("quest_complete", "Quest completed!", {questName})
 						
 						RunningGameStore.getRunningGames = realGetRunningGames
 						RunningGameStore.getGameForPID = realGetGameForPID
@@ -118,12 +146,12 @@ async function processQuest(quest, allQuests, questIndex) {
 				}
 				FluxDispatcher.subscribe("QUESTS_SEND_HEARTBEAT_SUCCESS", fn)
 				
-				console.log(`Spoofed your game to ${applicationName}. Wait for ${Math.ceil((secondsNeeded - secondsDone) / 60)} more minutes.`)
+				logToFile("spoofing", `Spoofed your game to ${applicationName}. Wait for ${Math.ceil((secondsNeeded - secondsDone) / 60)} more minutes.`, {questName, applicationName, minutesLeft: Math.ceil((secondsNeeded - secondsDone) / 60)})
 			})
 		}
 	} else if(taskName === "STREAM_ON_DESKTOP") {
 		if(!isApp) {
-			console.log("This no longer works in browser for non-video quests. Use the discord desktop app to complete the", questName, "quest!")
+			logToFile("error", "This no longer works in browser for non-video quests. Use the discord desktop app to complete the quest!", {questName})
 		} else {
 			let realFunc = ApplicationStreamingStore.getStreamerActiveStreamMetadata
 			ApplicationStreamingStore.getStreamerActiveStreamMetadata = () => ({
@@ -134,10 +162,10 @@ async function processQuest(quest, allQuests, questIndex) {
 			
 			let fn = data => {
 				let progress = quest.config.configVersion === 1 ? data.userStatus.streamProgressSeconds : Math.floor(data.userStatus.progress.STREAM_ON_DESKTOP.value)
-				console.log(`Quest progress: ${progress}/${secondsNeeded}`)
+				logToFile("progress", `Quest "${questName}" progress: ${progress}/${secondsNeeded}`, {questName, current: progress, total: secondsNeeded, percentage: Math.round((progress / secondsNeeded) * 100)})
 				
 				if(progress >= secondsNeeded) {
-					console.log("Quest completed!")
+					logToFile("quest_complete", "Quest completed!", {questName})
 					
 					ApplicationStreamingStore.getStreamerActiveStreamMetadata = realFunc
 					FluxDispatcher.unsubscribe("QUESTS_SEND_HEARTBEAT_SUCCESS", fn)
@@ -147,20 +175,20 @@ async function processQuest(quest, allQuests, questIndex) {
 			}
 			FluxDispatcher.subscribe("QUESTS_SEND_HEARTBEAT_SUCCESS", fn)
 			
-			console.log(`Spoofed your stream to ${applicationName}. Stream any window in vc for ${Math.ceil((secondsNeeded - secondsDone) / 60)} more minutes.`)
-			console.log("Remember that you need at least 1 other person to be in the vc!")
+			logToFile("spoofing", `Spoofed your stream to ${applicationName}. Stream any window in vc for ${Math.ceil((secondsNeeded - secondsDone) / 60)} more minutes.`, {questName, applicationName, minutesLeft: Math.ceil((secondsNeeded - secondsDone) / 60)})
+			logToFile("info", "Remember that you need at least 1 other person to be in the vc!")
 		}
 	} else if(taskName === "PLAY_ACTIVITY") {
 		const channelId = ChannelStore.getSortedPrivateChannels()[0]?.id ?? Object.values(GuildChannelStore.getAllGuilds()).find(x => x != null && x.VOCAL.length > 0).VOCAL[0].channel.id
 		const streamKey = `call:${channelId}:1`
 		
 		let fn = async () => {
-			console.log("Completing quest", questName, "-", quest.config.messages.questName)
+			logToFile("spoofing", `Completing quest ${questName}`, {questName})
 			
 			while(true) {
 				const res = await api.post({url: `/quests/${quest.id}/heartbeat`, body: {stream_key: streamKey, terminal: false}})
 				const progress = res.body.progress.PLAY_ACTIVITY.value
-				console.log(`Quest progress: ${progress}/${secondsNeeded}`)
+				logToFile("progress", `Quest "${questName}" progress: ${progress}/${secondsNeeded}`, {questName, current: progress, total: secondsNeeded, percentage: Math.round((progress / secondsNeeded) * 100)})
 				
 				await new Promise(resolve => setTimeout(resolve, 20 * 1000))
 				
@@ -170,10 +198,28 @@ async function processQuest(quest, allQuests, questIndex) {
 				}
 			}
 			
-			console.log("Quest completed!")
+			logToFile("quest_complete", "Quest completed!", {questName})
 			processQuestsSequentially(allQuests, questIndex + 1)
 		}
 		fn()
 	}
+}
 
+async function redeemAllQuests(quests) {
+	for(let quest of quests) {
+		try {
+			const questName = quest.config.messages.questName
+			logToFile("redeem_start", `Redeeming quest: ${questName}`, {questName})
+			
+			const res = await api.post({url: `/quests/${quest.id}/claim`})
+			
+			if(res.body) {
+				logToFile("redeem_success", `Successfully redeemed: ${questName}`, {questName})
+			} else {
+				logToFile("redeem_error", `Failed to redeem: ${questName}`, {questName})
+			}
+		} catch(error) {
+			logToFile("redeem_error", `Error redeeming quest: ${error.message}`, {error: error.message})
+		}
+	}
 }
