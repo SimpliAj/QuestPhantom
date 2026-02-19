@@ -33,7 +33,7 @@ function logToFile(type, message, data = {}) {
 }
 
 const supportedTasks = ["WATCH_VIDEO", "PLAY_ON_DESKTOP", "STREAM_ON_DESKTOP", "PLAY_ACTIVITY", "WATCH_VIDEO_ON_MOBILE"]
-let allQuests = QuestsStore?.quests ? [...QuestsStore.quests.values()].filter(x => x.id !== "1412491570820812933" && x.userStatus?.enrolledAt && !x.userStatus?.completedAt && new Date(x.config.expiresAt).getTime() > Date.now() && supportedTasks.find(y => Object.keys((x.config.taskConfig ?? x.config.taskConfigV2).tasks).includes(y))) : []
+let allQuests = QuestsStore?.quests ? [...QuestsStore?.quests.values()].filter(x => x.id !== "1412491570820812933" && x.userStatus?.enrolledAt && !x.userStatus?.completedAt && new Date(x.config.expiresAt).getTime() > Date.now() && supportedTasks.find(y => Object.keys((x.config.taskConfig ?? x.config.taskConfigV2).tasks).includes(y))) : []
 let isApp = typeof DiscordNative !== "undefined"
 
 if(!QuestsStore) {
@@ -105,8 +105,30 @@ async function processQuest(quest, allQuests, questIndex) {
 			logToFile("error", "This no longer works in browser for non-video quests. Use the discord desktop app to complete the quest!", {questName})
 		} else {
 			api.get({url: `/applications/public?application_ids=${applicationId}`}).then(res => {
+				if(!res || !res.body || res.body.length === 0) {
+					logToFile("error", "Failed to fetch application data from API", {applicationId})
+					processQuestsSequentially(allQuests, questIndex + 1)
+					return
+				}
 				const appData = res.body[0]
-				const exeName = appData.executables.find(x => x.os === "win32").name.replace(">","")
+				logToFile("debug", "API Response appData structure", {appDataKeys: Object.keys(appData), appData})
+				
+				// Handle both old and new API structures
+				let exeName
+				if(appData.executables && appData.executables.length > 0) {
+					const winExe = appData.executables.find(x => x.os === "win32")
+					if(!winExe) {
+						logToFile("error", "No Windows executable found for application", {applicationId})
+						processQuestsSequentially(allQuests, questIndex + 1)
+						return
+					}
+					exeName = winExe.name.replace(">","")
+				} else {
+					// Fallback: Create generic executable name from app name
+					exeName = appData.name.toLowerCase().replace(/\s+/g, "_") + ".exe"
+					logToFile("info", "Using fallback executable name (executables not in API response)", {generatedExeName: exeName})
+				}
+				
 				
 				const fakeGame = {
 					cmdLine: `C:\\Program Files\\${appData.name}\\${exeName}`,
@@ -147,6 +169,9 @@ async function processQuest(quest, allQuests, questIndex) {
 				FluxDispatcher.subscribe("QUESTS_SEND_HEARTBEAT_SUCCESS", fn)
 				
 				logToFile("spoofing", `Spoofed your game to ${applicationName}. Wait for ${Math.ceil((secondsNeeded - secondsDone) / 60)} more minutes.`, {questName, applicationName, minutesLeft: Math.ceil((secondsNeeded - secondsDone) / 60)})
+			}).catch(err => {
+				logToFile("error", `Failed to get application data: ${err.message}`, {error: err.message, applicationId})
+				processQuestsSequentially(allQuests, questIndex + 1)
 			})
 		}
 	} else if(taskName === "STREAM_ON_DESKTOP") {
