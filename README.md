@@ -58,6 +58,23 @@ The script processes all enrolled quests sequentially and logs progress in real-
 
 ---
 
+## 🤖 QuestHunter Discord Bot
+
+QuestHunter is a Discord bot that complements QuestPhantom by sending notifications when new quests are detected in your server.
+
+### Features
+- 📬 **Auto-Notifications** - Sends alerts in a designated channel when new quests are detected
+- ⚡ **Easy Setup** - Configure via simple slash commands
+- 🔔 **Real-time Updates** - Instant notification of quest availability
+
+### Installation
+
+[**Invite QuestHunter to your Discord Server**](https://discord.com/oauth2/authorize?client_id=1474123878002462801&permissions=2147699712&integration_type=0&scope=bot)
+
+Once invited, use slash commands to configure the bot and choose which channel receives quest notifications.
+
+---
+
 ## ⚙️ Technical Architecture
 
 ### Internal Discord Modules Used
@@ -124,6 +141,7 @@ This is an adapted version of [the original script](https://gist.github.com/aami
 - **Keep Discord open** with the console running for the duration
 - Quests are processed **one at a time** to avoid rate limiting
 - Logs are printed to the console in JSON format for debugging
+
 
 
 
