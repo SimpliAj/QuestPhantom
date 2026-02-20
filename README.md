@@ -71,7 +71,7 @@ QuestHunter is a Discord bot that complements QuestPhantom by sending notificati
 
 [**Invite QuestHunter to your Discord Server**](https://discord.com/oauth2/authorize?client_id=1474123878002462801&permissions=2147699712&integration_type=0&scope=bot)
 
-Once invited, use slash commands to configure the bot and choose which channel receives quest notifications.
+Once invited, use slash commands to configure the bot and choose which channel receives quest notifications and get a spoofguide with a link for the latest main.js
 
 ---
 
@@ -141,6 +141,7 @@ This is an adapted version of [the original script](https://gist.github.com/aami
 - **Keep Discord open** with the console running for the duration
 - Quests are processed **one at a time** to avoid rate limiting
 - Logs are printed to the console in JSON format for debugging
+
 
 
 
