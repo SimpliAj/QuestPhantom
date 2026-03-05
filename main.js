@@ -33,7 +33,7 @@ function logToFile(type, message, data = {}) {
 }
 
 const supportedTasks = ["WATCH_VIDEO", "PLAY_ON_DESKTOP", "STREAM_ON_DESKTOP", "PLAY_ACTIVITY", "WATCH_VIDEO_ON_MOBILE"]
-let allQuests = QuestsStore?.quests ? [...QuestsStore?.quests.values()].filter(x => x.id !== "1412491570820812933" && x.userStatus?.enrolledAt && !x.userStatus?.completedAt && new Date(x.config.expiresAt).getTime() > Date.now() && supportedTasks.find(y => Object.keys((x.config.taskConfig ?? x.config.taskConfigV2).tasks).includes(y))) : []
+let allQuests = QuestsStore?.quests ? [...QuestsStore?.quests.values()].filter(x => x.userStatus?.enrolledAt && !x.userStatus?.completedAt && new Date(x.config.expiresAt).getTime() > Date.now() && supportedTasks.find(y => Object.keys((x.config.taskConfig ?? x.config.taskConfigV2).tasks).includes(y))) : []
 let isApp = typeof DiscordNative !== "undefined"
 
 if(!QuestsStore) {
@@ -47,9 +47,7 @@ if(!QuestsStore) {
 
 async function processQuestsSequentially(quests, index) {
 	if(index >= quests.length) {
-		logToFile("info", "All quests completed! Starting to redeem rewards...")
-		await redeemAllQuests(quests)
-		logToFile("completed", "All quests completed and redeemed!")
+		logToFile("completed", "All quests completed!")
 		return
 	}
 	
@@ -227,24 +225,5 @@ async function processQuest(quest, allQuests, questIndex) {
 			processQuestsSequentially(allQuests, questIndex + 1)
 		}
 		fn()
-	}
-}
-
-async function redeemAllQuests(quests) {
-	for(let quest of quests) {
-		try {
-			const questName = quest.config.messages.questName
-			logToFile("redeem_start", `Redeeming quest: ${questName}`, {questName})
-			
-			const res = await api.post({url: `/quests/${quest.id}/claim`})
-			
-			if(res.body) {
-				logToFile("redeem_success", `Successfully redeemed: ${questName}`, {questName})
-			} else {
-				logToFile("redeem_error", `Failed to redeem: ${questName}`, {questName})
-			}
-		} catch(error) {
-			logToFile("redeem_error", `Error redeeming quest: ${error.message}`, {error: error.message})
-		}
 	}
 }
