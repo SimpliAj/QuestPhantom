@@ -67,7 +67,7 @@ async function processQuest(quest, allQuests, questIndex) {
 	const applicationName = quest.config.application.name
 	const questName = quest.config.messages.questName
 	const taskConfig = quest.config.taskConfig ?? quest.config.taskConfigV2
-	const taskName = ["WATCH_VIDEO", "PLAY_ON_DESKTOP", "STREAM_ON_DESKTOP", "PLAY_ACTIVITY", "WATCH_VIDEO_ON_MOBILE"].find(x => taskConfig.tasks[x] != null)
+	const taskName = ["WATCH_VIDEO", "PLAY_ON_DESKTOP", "STREAM_ON_DESKTOP", "PLAY_ACTIVITY", "WATCH_VIDEO_ON_MOBILE", "PLAY_ON_XBOX", "PLAY_ON_PLAYSTATION", "ACHIEVEMENT_IN_ACTIVITY"].find(x => taskConfig.tasks[x] != null)
 	const secondsNeeded = taskConfig.tasks[taskName].target
 	let secondsDone = quest.userStatus?.progress?.[taskName]?.value ?? 0
 
@@ -203,26 +203,27 @@ async function processQuest(quest, allQuests, questIndex) {
 			logToFile("spoofing", `Spoofed your stream to ${applicationName}. Stream any window in vc for ${Math.ceil((secondsNeeded - secondsDone) / 60)} more minutes.`, {questName, applicationName, minutesLeft: Math.ceil((secondsNeeded - secondsDone) / 60)})
 			logToFile("info", "Remember that you need at least 1 other person to be in the vc!")
 		}
-	} else if(taskName === "PLAY_ACTIVITY") {
+	} else if(taskName === "PLAY_ACTIVITY" || taskName === "PLAY_ON_XBOX" || taskName === "PLAY_ON_PLAYSTATION") {
 		const channelId = ChannelStore.getSortedPrivateChannels()[0]?.id ?? Object.values(GuildChannelStore.getAllGuilds()).find(x => x != null && x.VOCAL.length > 0).VOCAL[0].channel.id
 		const streamKey = `call:${channelId}:1`
-		
+
 		let fn = async () => {
-			logToFile("spoofing", `Completing quest ${questName}`, {questName})
-			
+			logToFile("spoofing", `Completing quest ${questName} (${taskName})`, {questName, taskName})
+
 			while(true) {
 				const res = await api.post({url: `/quests/${quest.id}/heartbeat`, body: {stream_key: streamKey, terminal: false}})
-				const progress = res.body.progress.PLAY_ACTIVITY.value
+				const progressData = res.body.progress
+				const progress = (progressData.PLAY_ACTIVITY ?? progressData.PLAY_ON_XBOX ?? progressData.PLAY_ON_PLAYSTATION)?.value ?? 0
 				logToFile("progress", `Quest "${questName}" progress: ${progress}/${secondsNeeded}`, {questName, current: progress, total: secondsNeeded, percentage: Math.round((progress / secondsNeeded) * 100)})
-				
+
 				await new Promise(resolve => setTimeout(resolve, 20 * 1000))
-				
+
 				if(progress >= secondsNeeded) {
 					await api.post({url: `/quests/${quest.id}/heartbeat`, body: {stream_key: streamKey, terminal: true}})
 					break
 				}
 			}
-			
+
 			logToFile("quest_complete", "Quest completed!", {questName})
 			processQuestsSequentially(allQuests, questIndex + 1)
 		}
