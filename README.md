@@ -109,11 +109,12 @@ Once invited, use slash commands to configure the bot and choose which channel r
 >
 
 > [!CAUTION]
-> As of April 7th 2026, Discord has expressed their intent to crack down on automating quest completion.
+>As of August 26th 2026, Discord has started suspending quest access of people caught automating quest completion.
+>
+>Some users have received the following system message:
 > 
-> Some users have received the following system message:
-> 
-> <img width="836" height="272" alt="image" src="https://github-production-user-asset-6210df.s3.amazonaws.com/9750071/574947159-6b439f4b-4381-4524-8540-b6a4777a80d0.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA%2F20260604%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260604T165942Z&X-Amz-Expires=300&X-Amz-Signature=ff90c993741fb48ef45e75a03e755755444858a9688a26dc636e8acc905e2a55&X-Amz-SignedHeaders=host&response-content-type=image%2Fpng" />
+> <img width="836" height="272" alt="image" src="https://private-user-images.githubusercontent.com/9750071/641866022-98474d24-3985-4986-b0f3-09fa254f4cf6.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3OTQyMjEzNjMsIm5iZiI6MTc5NDIyMTA2MywicGF0aCI6Ii85NzUwMDcxLzY0MTg2NjAyMi05ODQ3NGQyNC0zOTg1LTQ5ODYtYjBmMy0wOWZhMjU0ZjRjZjYucG5nP1gtQW16LUFsZ29yaXRobT1BV1M0LUhNQUMtU0hBMjU2JlgtQW16LUNyZWRlbnRpYWw9QUtJQVZDT0RZTFNBNTNQUUs0WkElMkYyMDI2MTEwOSUyRnVzLWVhc3QtMSUyRnMzJTJGYXdzNF9yZXF1ZXN0JlgtQW16LURhdGU9MjAyNjExMDlUMTA0NDIzWiZYLUFtei1FeHBpcmVzPTMwMCZYLUFtei1TaWduYXR1cmU9YWIyYzNiNDE0MWE2ODU3ZjViOGVhMGEzYjM1ODM0ODJmMTk1N2E0OWQ4MGI2MWYzYWUzNWM1NGI2ZTY4MTg5ZiZYLUFtei1TaWduZWRIZWFkZXJzPWhvc3QmcmVzcG9uc2UtY29udGVudC10eXBlPWltYWdlJTJGcG5nIn0.lGRjI1a08kiNCQu21NUy4fFO-Tj1hEssjaDxCFOoi9Y" />
+>
 > 
 > There isn't much I can do to make the script undetected, so use it at your own risk, as you most likely WILL get flagged by doing so.
 
